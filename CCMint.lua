@@ -3,47 +3,31 @@ local monitor = peripheral.wrap("top")
 local drive = peripheral.wrap("back")
 monitor.setTextScale(0.5)
 
-local width, height = monitor.getSize()
-
 -- Button definitions
 local buttons = {}
 
--- Function to wrap and print text
-function printText(x, y, text, limit)
-    local function wrap(str, limit)
-        limit = limit or width
-        local lines = {}
-        local line = ""
-        for word in str:gmatch("%S+") do
-            if #line + #word <= limit then
-                line = line..word.." "
-            else
-                table.insert(lines, line)
-                line = word .. " "
-            end
+-- Function to draw a button
+function drawButton(id, text, x, y, width, height, textColor, bgColor)
+    monitor.setBackgroundColor(bgColor)
+    monitor.setTextColor(textColor)
+    monitor.setCursorPos(x, y)
+    for i = 1, height do
+        if i == 1 or i == height then
+            monitor.write(string.rep(" ", width))
+        else
+            monitor.write(" " .. text .. string.rep(" ", width - string.len(text) - 2) .. " ")
         end
-        table.insert(lines, line)
-        return lines
+        if i < height then
+            monitor.setCursorPos(x, y + i)
+        end
     end
-
-    local lines = wrap(text, limit)
-    for i, line in ipairs(lines) do
-        monitor.setCursorPos(x, y + (i - 1))
-        monitor.write(line)
-    end
-end
-
--- Function to draw a button (simplified for demonstration)
-function drawButton(id, text, x, y)
-    local width = string.len(text) + 2  -- Simple calculation for button width
-    printText(x, y, text, width)
-    buttons[id] = {x = x, y = y, width = width, height = 1} -- Assuming single line buttons for simplicity
+    buttons[id] = {x = x, y = y, width = width, height = height}
 end
 
 -- Function to check button press
 function checkButtonPress(x, y)
     for id, button in pairs(buttons) do
-        if x >= button.x and x <= button.x + button.width - 1 and y == button.y then
+        if x >= button.x and x <= button.x + button.width - 1 and y >= button.y and y <= button.y + button.height - 1 then
             if id == "withdraw" then
                 withdrawPage()
             end
@@ -52,21 +36,29 @@ function checkButtonPress(x, y)
     end
 end
 
--- Page display functions
+-- Function to display the splash page
 function splashPage()
     monitor.clear()
-    printText(2, 2, "Please insert your disk into the drive.", width - 4)
+    monitor.setCursorPos(2, 2)
+    monitor.write("Please Insert Disk")
+    -- Reset buttons
     buttons = {}
 end
 
+-- Function to display the home page
 function homePage()
     monitor.clear()
-    drawButton("withdraw", "Withdraw Funds", 2, 4)
+    drawButton("withdraw", "Withdraw Funds", 2, 4, 20, 3, colors.white, colors.blue)
+    -- Reset buttons not needed here since we redefine buttons in drawButton
 end
 
+-- Function to display the withdraw page
 function withdrawPage()
     monitor.clear()
-    printText(2, 2, "Welcome to the Withdrawal Page. Please follow the instructions.", width - 4)
+    monitor.setCursorPos(2, 2)
+    monitor.write("Withdrawal Page")
+    -- Example function, no buttons defined here for simplicity
+    -- Add functionality as needed
 end
 
 -- Initial display
@@ -75,7 +67,7 @@ splashPage()
 -- Event loop
 while true do
     local event, side, x, y = os.pullEvent()
-    if (event == "disk" or event == "disk_eject") and side == "back" then
+    if event == "disk" or event == "disk_eject" and side == "back" then
         if disk.isPresent("back") then
             homePage()
         else

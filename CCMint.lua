@@ -3,59 +3,47 @@ local monitor = peripheral.wrap("top")
 local drive = peripheral.wrap("back")
 monitor.setTextScale(0.5)
 
-local screenWidth, screenHeight = monitor.getSize()
+local width, height = monitor.getSize()
 
 -- Button definitions
 local buttons = {}
 
--- Function to wrap and display text
-function writeText(text, x, y, limit)
-    local function wrap(str)
+-- Function to wrap and print text
+function printText(x, y, text, limit)
+    local function wrap(str, limit)
+        limit = limit or width
         local lines = {}
         local line = ""
-        str:gsub("%s+", " "):gsub("%S+", function(word)
+        for word in str:gmatch("%S+") do
             if #line + #word <= limit then
-                line = line .. word .. " "
+                line = line..word.." "
             else
                 table.insert(lines, line)
                 line = word .. " "
             end
-        end)
+        end
         table.insert(lines, line)
         return lines
     end
 
-    local lines = wrap(text)
+    local lines = wrap(text, limit)
     for i, line in ipairs(lines) do
-        monitor.setCursorPos(x, y + i - 1)
+        monitor.setCursorPos(x, y + (i - 1))
         monitor.write(line)
     end
 end
 
--- Function to draw a button
-function drawButton(id, text, x, y, width, height, textColor, bgColor)
-    monitor.setBackgroundColor(bgColor)
-    monitor.setTextColor(textColor)
-    monitor.setCursorPos(x, y)
-    for i = 1, height do
-        monitor.write(string.rep(" ", width))
-        if i < height then
-            monitor.setCursorPos(x, y + i)
-        end
-    end
-    -- Center the text within the button
-    local centeredX = x + math.floor((width - string.len(text)) / 2)
-    local centeredY = y + math.floor(height / 2)
-    monitor.setCursorPos(centeredX, centeredY)
-    monitor.write(text)
-    
-    buttons[id] = {x = x, y = y, width = width, height = height}
+-- Function to draw a button (simplified for demonstration)
+function drawButton(id, text, x, y)
+    local width = string.len(text) + 2  -- Simple calculation for button width
+    printText(x, y, text, width)
+    buttons[id] = {x = x, y = y, width = width, height = 1} -- Assuming single line buttons for simplicity
 end
 
 -- Function to check button press
 function checkButtonPress(x, y)
     for id, button in pairs(buttons) do
-        if x >= button.x and x <= button.x + button.width - 1 and y >= button.y and y <= button.y + button.height - 1 then
+        if x >= button.x and x <= button.x + button.width - 1 and y == button.y then
             if id == "withdraw" then
                 withdrawPage()
             end
@@ -64,29 +52,21 @@ function checkButtonPress(x, y)
     end
 end
 
--- Function to display the splash page
+-- Page display functions
 function splashPage()
     monitor.clear()
-    -- Using writeText for wrapping
-    writeText("Please Insert Disk", 2, 2, screenWidth - 2)
-    -- Reset buttons
+    printText(2, 2, "Please insert your disk into the drive.", width - 4)
     buttons = {}
 end
 
--- Function to display the home page
 function homePage()
     monitor.clear()
-    drawButton("withdraw", "Withdraw Funds", 2, 4, 20, 3, colors.white, colors.blue)
-    -- Reset buttons not needed here since we redefine buttons in drawButton
+    drawButton("withdraw", "Withdraw Funds", 2, 4)
 end
 
--- Function to display the withdraw page
 function withdrawPage()
     monitor.clear()
-    -- Using writeText for wrapping
-    writeText("Withdrawal Page", 2, 2, screenWidth - 2)
-    -- Example function, no buttons defined here for simplicity
-    -- Add functionality as needed
+    printText(2, 2, "Welcome to the Withdrawal Page. Please follow the instructions.", width - 4)
 end
 
 -- Initial display

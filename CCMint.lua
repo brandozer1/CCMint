@@ -7,9 +7,6 @@ monitor.setTextScale(0.5)
 os.loadAPI("button.lua")
 button.setMonitor(monitor)
 
--- Track the current state
-local lastDiskPresent = not disk.isPresent("back") -- Initialize to the opposite state to force update
-
 -- Function to create buttons
 local function createButton(label, posx, posy, callback)
     local newButton = button.create(label)
@@ -38,20 +35,28 @@ local function homePage()
     )
 end
 
--- Main loop to manage page transitions based on disk presence
-while true do
-    local diskPresent = disk.isPresent("back")
-    -- Check if the disk presence state has changed
-    if diskPresent ~= lastDiskPresent then
-        if diskPresent then
-            -- Disk has been inserted
-            homePage()
-        else
-            -- Disk has been removed
-            splashPage()
+local function waitForDiskEvent()
+    while true do
+        local event, side = os.pullEvent()
+        if (event == "disk" or event == "disk_eject") and side == "back" then
+            return disk.isPresent(side)
         end
-        -- Update the last known disk presence state
-        lastDiskPresent = diskPresent
     end
-    sleep(0.1) -- Short delay to prevent overloading the CPU
+end
+
+-- Initial page based on current disk state
+if disk.isPresent("back") then
+    homePage()
+else
+    splashPage()
+end
+
+-- Event-driven loop to manage page transitions based on disk presence
+while true do
+    local diskPresent = waitForDiskEvent()
+    if diskPresent then
+        homePage()
+    else
+        splashPage()
+    end
 end

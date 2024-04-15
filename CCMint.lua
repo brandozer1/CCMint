@@ -51,6 +51,8 @@ end
 function homePage()
     monitor.clear()
     drawButton("withdraw", "Withdraw Funds", 2, 4, 20, 3, colors.white, colors.blue)
+    drawButton("deposit", "Deposit Funds", 2, 8, 20, 3, colors.white, colors.blue)
+    drawButton("balance", "Check Balance", 2, 12, 20, 3, colors.white, colors.blue)
     -- Reset buttons not needed here since we redefine buttons in drawButton
 end
 

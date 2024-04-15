@@ -40,7 +40,7 @@ end
 function splashPage()
     monitor.clear()
     monitor.setCursorPos(1, 2)
-    monitor.write("Please Insert")
+    monitor.write("Please dInsert")
     monitor.setCursorPos(1, 3)
     monitor.write("Card/Disk")
     -- Reset buttons

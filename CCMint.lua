@@ -3,80 +3,78 @@ local monitor = peripheral.wrap("top")
 local drive = peripheral.wrap("back")
 monitor.setTextScale(0.5)
 
--- Load APIs
-os.loadAPI("button.lua")
-button.setMonitor(monitor)
+-- Button storage
+local buttons = {}
 
--- Define global variables
-local currentPage = "splash" -- Keep track of the current page
-
--- Function to create buttons
-local function createButton(label, posx, posy, callback)
-    local newButton = button.create(label)
-    newButton.setPos(posx, posy)
-    newButton.onClick(callback)
-    newButton.setAlign("center")
-    return newButton
+-- Utility functions for buttons
+local function createButton(label, x, y, width, height, callback)
+    table.insert(buttons, {label = label, x = x, y = y, width = width, height = height, callback = callback})
 end
 
--- Define page functions
+local function drawButtons()
+    for _, btn in pairs(buttons) do
+        monitor.setCursorPos(btn.x, btn.y)
+        monitor.write(btn.label)
+    end
+end
+
+local function checkButtonClick(x, y)
+    for _, btn in pairs(buttons) do
+        if x >= btn.x and x <= (btn.x + btn.width - 1) and y >= btn.y and y <= (btn.y + btn.height - 1) then
+            btn.callback()
+            break
+        end
+    end
+end
+
+-- Page functions
 local function splashPage()
     monitor.clear()
     monitor.setCursorPos(1, 1)
-    monitor.write("Please Insert")
-    monitor.setCursorPos(1, 2)
-    monitor.write("Your Card/Disk")
-    currentPage = "splash"
+    monitor.write("Please Insert Disk")
+    buttons = {}
 end
 
 local function homePage()
     monitor.clear()
     monitor.setCursorPos(1, 1)
-    button.await(
-        createButton("Insert Funds", 1, 2, function() print("Inserting Funds...") end),
-        createButton("Withdraw Funds", 1, 4, function() currentPage = "withdraw" end),
-        createButton("Check Balance", 1, 6, function() print("Checking Balance...") end)
-    )
-    currentPage = "home"
+    monitor.write("Home Page")
+    buttons = {}
+    createButton("Withdraw Funds", 2, 3, 14, 1, function()
+        withdrawPage()
+    end)
+    drawButtons()
 end
 
 local function withdrawPage()
     monitor.clear()
     monitor.setCursorPos(1, 1)
     monitor.write("Withdraw Page")
-    -- Here you might want to create buttons specific to this page, etc.
-    currentPage = "withdraw"
+    buttons = {}
+    -- Add more functionality or buttons for withdraw page here
 end
 
--- Function to handle button events
-local function handleButtonEvent(x, y)
-    -- This is a placeholder for the actual button check function you might have
-    -- It will check if a button at (x, y) was pressed and then perform the callback
-    button.checkButton(x, y)
-    -- If currentPage was changed by a button, call the respective page function
-    if currentPage == "withdraw" then
-        withdrawPage()
+-- Main program
+local function main()
+    if disk.isPresent("back") then
+        homePage()
+    else
+        splashPage()
     end
-end
 
--- Initial page
-if disk.isPresent("back") then
-    homePage()
-else
-    splashPage()
-end
-
--- Main event loop
-while true do
-    local event, side, x, y = os.pullEvent()
-    
-    if (event == "disk" or event == "disk_eject") and side == "back" then
-        if disk.isPresent("back") then
-            homePage()
-        else
-            splashPage()
+    while true do
+        local event, side, x, y = os.pullEvent()
+        
+        if (event == "disk" or event == "disk_eject") and side == "back" then
+            if disk.isPresent("back") then
+                homePage()
+            else
+                splashPage()
+            end
+        elseif event == "monitor_touch" then
+            checkButtonClick(x, y)
         end
-    elseif event == "monitor_touch" then
-        handleButtonEvent(x, y)
     end
 end
+
+main()

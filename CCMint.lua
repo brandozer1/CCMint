@@ -7,14 +7,14 @@ monitor.setTextScale(0.5)
 os.loadAPI("button.lua")
 button.setMonitor(monitor)
 
--- Track the current page
-local currentPage = "home"
+-- Track the current state
+local lastDiskPresent = not disk.isPresent("back") -- Initialize to the opposite state to force update
 
 -- Function to create buttons
 local function createButton(label, posx, posy, callback)
     local newButton = button.create(label)
     newButton.setPos(posx, posy)
-    newButton.onClick(callback) -- Pass the callback function without invoking it
+    newButton.onClick(callback) -- Pass callback correctly
     newButton.setAlign("center")
     return newButton
 end
@@ -38,27 +38,20 @@ local function homePage()
     )
 end
 
-local function withdrawPage()
-    monitor.clear()
-    button.await(
-        createButton("-1", 1, 2, function() print("-1") end),
-        createButton("+1", 1, 6, function() print("+1") end) 
-    )
-end
-
--- Main loop to manage page transitions
+-- Main loop to manage page transitions based on disk presence
 while true do
-    if disk.isPresent("back") then
-        if currentPage == "home" then
+    local diskPresent = disk.isPresent("back")
+    -- Check if the disk presence state has changed
+    if diskPresent ~= lastDiskPresent then
+        if diskPresent then
+            -- Disk has been inserted
             homePage()
-        elseif currentPage == "withdraw" then
-            withdrawPage()
-        end
-    else
-        if currentPage ~= "splash" then
+        else
+            -- Disk has been removed
             splashPage()
-            currentPage = "splash" -- Prevent re-running splashPage
         end
+        -- Update the last known disk presence state
+        lastDiskPresent = diskPresent
     end
     sleep(0.1) -- Short delay to prevent overloading the CPU
 end

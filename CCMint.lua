@@ -50,7 +50,7 @@ end
 -- Function to display the home page
 function homePage()
     monitor.clear()
-    drawButton("withdraw", "Withdraw Funds", 1, 1, 10, 3, colors.white, colors.blue)
+    drawButton("withdraw", "WWithdraw Funds", 1, 1, 10, 3, colors.white, colors.blue)
     drawButton("deposit", "Deposit Funds", 1, 3, 10, 3, colors.white, colors.blue)
     drawButton("balance", "Check Balance", 1, 6, 10, 3, colors.white, colors.blue)
     -- Reset buttons not needed here since we redefine buttons in drawButton

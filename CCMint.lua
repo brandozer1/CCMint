@@ -39,8 +39,10 @@ end
 -- Function to display the splash page
 function splashPage()
     monitor.clear()
-    monitor.setCursorPos(2, 2)
-    monitor.write("Please Insert Disk")
+    monitor.setCursorPos(1, 2)
+    monitor.write("Please Insert")
+    monitor.setCursorPos(1, 3)
+    monitor.write("Card/Disk")
     -- Reset buttons
     buttons = {}
 end
